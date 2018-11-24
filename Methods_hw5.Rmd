@@ -1,0 +1,45 @@
+---
+title: "Methods_hw5"
+output: html_document
+author: "Yishan Wang"
+date: 2018-11-24
+---
+
+```{r include = FALSE}
+library(tidyverse)
+library(faraway)
+library(tibble)
+```
+
+```{r}
+state_data = state.x77 %>%
+  data.frame() %>%
+  janitor::clean_names() %>%
+  rownames_to_column(var = "state")
+```
+
+# Question 1
+
+Generate appropriate descriptive statistics for continous variables:
+
+```{r}
+state_data %>%
+  summary()
+```
+
+Explore the dataset and generate relevant graphs for all variables of interest:
+
+```{r}
+data_without_state = state_data %>%
+  select(-state)
+
+data_without_state %>%
+  pairs()
+
+Hmisc::rcorr(as.matrix(data_without_state)) %>%
+  broom::tidy() %>%
+  mutate(abs_estimate = abs(estimate)) %>%
+  filter(abs_estimate >= 0.5) %>% 
+  knitr::kable(digits = 3)
+```
+
