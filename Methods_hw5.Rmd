@@ -43,3 +43,31 @@ Hmisc::rcorr(as.matrix(data_without_state)) %>%
   knitr::kable(digits = 3)
 ```
 
+```{r}
+# Boxplots for each variable
+# par(mar=c(3,3,1,1)) # if margins are too large
+par(mfrow = c(2, 3))
+boxplot(data_without_state$life_exp, main = 'life_exp')
+boxplot(data_without_state$population, main = 'population')
+boxplot(data_without_state$income, main = 'income')
+boxplot(data_without_state$illiteracy, main = 'illiteracy')
+boxplot(data_without_state$murder, main = 'murder')
+boxplot(data_without_state$hs_grad, main = 'hs_grad')
+boxplot(data_without_state$frost, main = 'frost')
+boxplot(data_without_state$area, main = 'area')
+```
+
+# Question 2
+
+Use automatic procedures to find a ‘best subset’ of the full model. 
+
+### a)
+
+```{r}
+mod = lm(life_exp ~ population + income + illiteracy + murder + hs_grad + frost + area, data = state_data)
+
+step(mod, direction = "forward")
+step(mod, direction = "backward")
+step(mod, direction = "both")
+```
+?step
