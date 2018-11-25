@@ -46,7 +46,7 @@ Hmisc::rcorr(as.matrix(data_without_state)) %>%
 ```{r}
 # Boxplots for each variable
 # par(mar=c(3,3,1,1)) # if margins are too large
-par(mfrow = c(2, 3))
+par(mfrow = c(2, 4))
 boxplot(data_without_state$life_exp, main = 'life_exp')
 boxplot(data_without_state$population, main = 'population')
 boxplot(data_without_state$income, main = 'income')
