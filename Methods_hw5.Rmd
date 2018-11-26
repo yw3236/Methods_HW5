@@ -10,6 +10,8 @@ library(tidyverse)
 library(faraway)
 library(tibble)
 library(leaps)
+library(caret)
+library(boot)
 ```
 
 ```{r}
@@ -210,7 +212,77 @@ HH::vif(multi.fit4)
 Use a 10-fold cross-validation.
 
 ```{r}
-
+fold_cv = train(life_exp ~ population + murder + hs_grad + frost, state_data, 
+                   method = "lm",
+                   trControl = trainControl(
+                     method = "cv", number = 10
+                   )
+)
 ```
 
+### b)
+
+Bootstrap technique “residual sampling” experiment.
+
+#### i)
+
+Perform a regression model with the original sample; calculate predicted values and residuals.
+
+```{r}
+mod_bootstrap = lm(life_exp ~ population + murder + hs_grad + frost, data = state_data)
+
+predicted_state_data = state_data %>%
+  mutate(pred = predict(mod_bootstrap),
+         res = residuals(mod_bootstrap))
+
+predicted_state_data
+```
+
+#### ii)
+
+Randomly resample the residuals (with replacement), but leave the X values and predicted values unchanged.
+
+```{r}
+boot_residual = function(formula, data, indices){
+  
+  d = data[indices, ]
+  mod = lm(formula, data = d)
+	res = residuals(mod)
+	return(res)
+	
+}
+
+resample = boot(data = predicted_state_data, statistic = boot_residual, R = 100, formula = life_exp ~ population + murder + hs_grad + frost) %>%
+  broom::tidy()
+
+resample_predicted_state_data = predicted_state_data %>%
+  mutate(resample_res = resample$statistic + resample$bias)
+
+resample_predicted_state_data
+```
+
+#### iii)
+
+Construct new Yi* values by adding the original predicted values to the bootstrap residuals.
+
+```{r}
+resample_pred_state_data_with_new_pred = resample_predicted_state_data %>%
+  mutate(resample_pred = pred + resample_res)
+```
+
+#### iv)
+
+Regress Yi* on the original X variable(s).
+
+```{r}
+new_mod = lm(resample_pred ~ population + murder + hs_grad + frost, data = resample_pred_state_data_with_new_pred)
+```
+
+### v)
+
+Repeat steps (ii) – (iv) 10 times and 1,000 times.
+
+```{r}
+
+```
 
