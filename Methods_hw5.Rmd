@@ -278,9 +278,17 @@ Regress Yi* on the original X variable(s).
 new_mod = lm(resample_pred ~ population + murder + hs_grad + frost, data = resample_pred_state_data_with_new_pred)
 ```
 
-### v)
+#### v)
 
 Repeat steps (ii) – (iv) 10 times and 1,000 times.
+
+##### repeat 10 times
+
+```{r}
+
+```
+
+##### repeat 1,000 times
 
 ```{r}
 
