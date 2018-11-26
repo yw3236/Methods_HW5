@@ -9,6 +9,7 @@ date: 2018-11-24
 library(tidyverse)
 library(faraway)
 library(tibble)
+library(leaps)
 ```
 
 ```{r}
@@ -31,8 +32,10 @@ Explore the dataset and generate relevant graphs for all variables of interest:
 
 ```{r}
 data_without_state = state_data %>%
-  select(-state)
+  select(-state) %>%
+  select(life_exp, population, income, illiteracy, murder, hs_grad, frost, area)
 
+# Find possible multicollinearity
 data_without_state %>%
   pairs()
 
@@ -45,7 +48,6 @@ Hmisc::rcorr(as.matrix(data_without_state)) %>%
 
 ```{r}
 # Boxplots for each variable
-# par(mar=c(3,3,1,1)) # if margins are too large
 par(mfrow = c(2, 4))
 boxplot(data_without_state$life_exp, main = 'life_exp')
 boxplot(data_without_state$population, main = 'population')
@@ -66,8 +68,72 @@ Use automatic procedures to find a ‘best subset’ of the full model.
 ```{r}
 mod = lm(life_exp ~ population + income + illiteracy + murder + hs_grad + frost + area, data = state_data)
 
-step(mod, direction = "forward")
-step(mod, direction = "backward")
-step(mod, direction = "both")
+step(mod, direction = 'forward')
+step(mod, direction = 'backward')
+step(mod, direction = 'both')
 ```
-?step
+
+No, forward direction procedure generates different submodel from backward direction procedure and both direction procedure. The submodel I selected is: life_exp ~ population + murder + hs_grad + frost.
+
+### b)
+
+```{r}
+submod = lm(life_exp ~ population + murder + hs_grad + frost, data = state_data)
+summary(submod)
+```
+
+Yes, population is a close call because the its p-value is greater than 0.05.
+
+```{r}
+new_submod = lm(life_exp ~ murder + hs_grad + frost, data = state_data)
+summary(new_submod)
+```
+
+I'll discard population since both R-squared and adjusted R-squared don't have significant dicrease after discarding population. And frost becomes more significant after discarding population. The model is still significant after discarding population because the small p-value of F test.
+
+### c)
+
+There is a strong negative association between illiteracy and hs_grad. (please see Question 1) No, the subset model doesn't include both of those two variables. We don't need to worry about multicollinearity.
+
+# Question 3
+
+Use criterion-based procedures to select the ‘best subset’.
+
+```{r}
+# Printing the 2 best models of each size, using the Cp criterion:
+leaps(x = data_without_state[, 2:8], y = data_without_state[, 1], nbest = 2, method = "Cp")
+
+# Printing the 2 best models of each size, using the adjusted R^2 criterion:
+leaps(x = data_without_state[, 2:8], y = data_without_state[, 1], nbest = 2, method = "adjr2")
+
+# Summary of models for each size (one model per size)
+b = regsubsets(life_exp ~ ., data = data_without_state, nbest = 1)
+rs = summary(b, matrix.logical = TRUE)
+rs
+
+# Plots of Cp and Adj-R2 as functions of parameters
+par(mar = c(4, 4, 1, 1))
+par(mfrow = c(1, 2))
+
+plot(2:8, rs$cp, xlab = "Number of parameters", ylab = "Cp Statistic")
+abline(0, 1)
+
+plot(2:8, rs$adjr2, xlab = "Number of parameters", ylab = "Adj R2")
+
+# AIC of the 4-predictor model:
+multi.fit4 = lm(life_exp ~ population + murder + hs_grad + frost, data = state_data)
+AIC(multi.fit4)
+
+# BIC of the 4-predictor model:
+AIC(multi.fit4, k = log(length(state_data$life_exp)))
+
+# AIC of the 5-predictor model:
+multi.fit5 = lm(life_exp ~ population + income + murder + hs_grad + frost, data = state_data)
+AIC(multi.fit5)
+
+# BIC of the 5-predictor model:
+AIC(multi.fit5, k = log(length(state_data$life_exp)))
+```
+
+The best subset model I selected based on Cp, Adj-R^2, AIC, BIC is: life_exp ~ population + murder + hs_grad + frost.
+
