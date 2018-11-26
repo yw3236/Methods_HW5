@@ -1,6 +1,6 @@
 ---
 title: "Methods_hw5"
-output: html_document
+output: github_document
 author: "Yishan Wang"
 date: 2018-11-24
 ---
