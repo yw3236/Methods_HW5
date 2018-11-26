@@ -135,5 +135,52 @@ AIC(multi.fit5)
 AIC(multi.fit5, k = log(length(state_data$life_exp)))
 ```
 
+```{r}
+best = function(model, ...) 
+{
+  subsets = regsubsets(formula(model), model.frame(model), ...)
+  subsets = with(summary(subsets),
+                  cbind(p = as.numeric(rownames(which)), which, rss, rsq, adjr2, cp, bic))
+  
+  return(subsets)
+}  
+
+# Select the 'best' model of all subsets for 4-predictor model
+round(best(multi.fit4, nbest = 1), 4)
+```
+
 The best subset model I selected based on Cp, Adj-R^2, AIC, BIC is: life_exp ~ population + murder + hs_grad + frost.
+
+# Problem 4
+
+Compare the two ‘subsets’ from parts 2 and 3 and recommend a ‘final’ model. 
+
+Although I discarded population in the model `life_exp ~ population + murder + hs_grad + frost` since both R-squared and adjusted R-squared don't have significant dicrease after discarding population, criterion-based procedures showed that I shouldn't have discarded population based on Cp, Adj-R^2, AIC, BIC criterions. So the final model I recommend is: life_exp ~ population + murder + hs_grad + frost.
+
+### a)
+
+Identify any leverage and/or influential points and take appropriate measures.
+
+```{r}
+# rstandard function gives the internally studentized residuals 
+stu_res = rstandard(multi.fit4)
+outliers_y = stu_res[abs(stu_res) > 2.5]
+outliers_y
+
+# Measures of influence:
+# Gives DFFITS, Cook's Distance, Hat diagonal elements, and others.
+influence.measures(multi.fit4)
+
+# Look at the Cook's distance lines and notice no potential Y outlier or influential point
+par(mfrow = c(2, 2))
+plot(multi.fit4)
+```
+
+There is no outlier in Y, but there are 5 outliers (leverage) in X. There is no influencial point.
+
+### b)
+
+```{r}
+
+```
 
