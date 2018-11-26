@@ -174,13 +174,43 @@ influence.measures(multi.fit4)
 # Look at the Cook's distance lines and notice no potential Y outlier or influential point
 par(mfrow = c(2, 2))
 plot(multi.fit4)
+
+# Remove observation 11
+state_no11 = state_data[c(-11), ]
+mult.fit_no11 = lm(life_exp ~ population + murder + hs_grad + frost, data = state_no11) 
+
+# Examine results with and without observation 11 that have very high life_exp (>73)
+summary(multi.fit4)
+summary(mult.fit_no11)
+
+par(mfrow = c(2, 2))
+plot(mult.fit_no11)
 ```
 
-There is no outlier in Y, but there are 5 outliers (leverage) in X. There is no influencial point.
+There is no outlier in Y, but there are 5 outliers (leverage) in X. There is 1 influencial point (observation 11) because its exclusion or inclusion causes major changes in the regression function.
 
 ### b)
+
+Check the model assumptions.  
+
+* Based on residuals vs fitted value plot, since there is no specific pattern in the plot, the equal variances of errors assumption is satisfied.
+
+* Based on QQ plot, since the majority points approximately fall on the line, the errors normally distributed assumption is satisfied.
+
+```{r}
+HH::vif(multi.fit4)
+```
+
+* Based on VIF, since the vif of all predictors are less than 5, there is no multicollinearity problem.
+
+# Question 5
+
+### a)
+
+Use a 10-fold cross-validation.
 
 ```{r}
 
 ```
+
 
