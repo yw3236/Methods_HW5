@@ -244,15 +244,13 @@ Randomly resample the residuals (with replacement), but leave the X values and p
 
 ```{r}
 boot_residual = function(formula, data, indices){
-  
   d = data[indices, ]
   mod = lm(formula, data = d)
 	res = residuals(mod)
 	return(res)
-	
 }
 
-resample = boot(data = predicted_state_data, statistic = boot_residual, R = 100, formula = life_exp ~ population + murder + hs_grad + frost) %>%
+resample = boot(data = predicted_state_data, statistic = boot_residual, R = 10000, formula = life_exp ~ population + murder + hs_grad + frost) %>%
   broom::tidy()
 
 resample_predicted_state_data = predicted_state_data %>%
@@ -285,7 +283,32 @@ Repeat steps (ii) – (iv) 10 times and 1,000 times.
 ##### repeat 10 times
 
 ```{r}
+n = 1
 
+replicated_10 = repeat {
+  
+  boot_residual = function(formula, data, indices){
+    d = data[indices, ]
+    mod = lm(formula, data = d)
+	  res = residuals(mod)
+	  return(res)
+  }
+
+  resample = boot(data = predicted_state_data, statistic = boot_residual, R = 10000, formula = life_exp ~ population + murder + hs_grad + frost) %>%
+    broom::tidy()
+
+  resample_pred_state_data_with_new_pred = predicted_state_data %>%
+    mutate(resample_res = resample$statistic + resample$bias) %>%
+    mutate(resample_pred = pred + resample_res)
+
+  new_mod = lm(resample_pred ~ population + murder + hs_grad + frost, data = resample_pred_state_data_with_new_pred)
+  
+  n = n + 1
+  
+  if (n > 10) {
+    break
+  }
+}
 ```
 
 ##### repeat 1,000 times
